@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Реестр автомобилей - Сиреневая 31</title>
+    <style>
+        /* Стили остаются такими же, как в предыдущем файле */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            margin-bottom: 20px;
+            color: #333;
+            text-align: center;
+        }
+        
+        .search-container {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+        }
+        
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .search-select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            min-width: 150px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+            vertical-align: top;
+        }
+        
+        th {
+            background-color: #4a6fa5;
+            color: white;
+            cursor: pointer;
+            position: sticky;
+            top: 0;
+        }
+        
+        th:hover {
+            background-color: #3a5a80;
+        }
+        
+        th.sort-asc::after {
+            content: " ↑";
+            font-weight: bold;
+        }
+        
+        th.sort-desc::after {
+            content: " ↓";
+            font-weight: bold;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        tr:hover {
+            background-color: #e3f2fd;
+        }
+        
+        .editable {
+            cursor: pointer;
+            min-height: 30px;
+            position: relative;
+        }
+        
+        .editable:hover {
+            background-color: #bbdefb;
+        }
+        
+        .editable.editing {
+            background-color: #e8f4fd;
+            padding: 0;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 15px;
+            background: #e8f4fd;
+            border-radius: 6px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            background-color: #4a6fa5;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        
+        .btn:hover {
+            background-color: #3a5a80;
+        }
+        
+        .btn-add {
+            background-color: #2e7d32;
+        }
+        
+        .btn-add:hover {
+            background-color: #1b5e20;
+        }
+        
+        .btn-export {
+            background-color: #1565c0;
+        }
+        
+        .btn-export:hover {
+            background-color: #0d47a1;
+        }
+        
+        .btn-delete {
+            background-color: #c62828;
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        
+        .btn-delete:hover {
+            background-color: #b71c1c;
+        }
+        
+        .btn-save {
+            background-color: #6a1b9a;
+        }
+        
+        .btn-save:hover {
+            background-color: #4a148c;
+        }
+        
+        .stats {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            font-size: 14px;
+            text-align: center;
+            border-left: 4px solid #4a6fa5;
+        }
+        
+        .highlight {
+            background-color: #fff9c4 !important;
+        }
+        
+        .car-numbers {
+            line-height: 1.4;
+        }
+        
+        .edit-input {
+            width: 100%;
+            height: 100%;
+            border: 1px solid #4a6fa5;
+            padding: 8px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        
+        .date-cell {
+            font-family: monospace;
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .storage-info {
+            margin-top: 10px;
+            padding: 10px;
+            background: #e8f4fd;
+            border-radius: 4px;
+            font-size: 12px;
+            text-align: center;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            table {
+                display: block;
+                overflow-x: auto;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .btn {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚗 Реестр автомобилей жителей - Сиреневая 31</h1>
+        
+        <div class="controls">
+            <div>
+                <button class="btn btn-add" onclick="addNewRow()">➕ Добавить запись</button>
+                <button class="btn" onclick="clearSearch()">🧹 Очистить поиск</button>
+                <button class="btn btn-save" onclick="saveToFile()">💾 Сохранить в файл</button>
+            </div>
+            <div>
+                <button class="btn" onclick="resetToOriginal()">↩️ Сбросить к исходным</button>
+                <button class="btn btn-export" onclick="exportToCSV()">📥 Экспорт в CSV</button>
+            </div>
+        </div>
+        
+        <div class="search-container">
+            <select class="search-select" id="searchType">
+                <option value="all">Искать везде</option>
+                <option value="apartment">По квартире</option>
+                <option value="car">По номеру авто</option>
+                <option value="name">По имени</option>
+                <option value="phone">По телефону</option>
+            </select>
+            <input type="text" 
+                   class="search-box" 
+                   id="searchInput" 
+                   placeholder="Введите текст для поиска..."
+                   onkeyup="searchTable()">
+            <div style="display: flex; align-items: center; gap: 5px;">
+                <input type="checkbox" id="highlightMatches" checked onchange="searchTable()">
+                <label for="highlightMatches">Подсветить совпадения</label>
+            </div>
+        </div>
+        
+        <div class="table-container">
+            <table id="carTable">
+                <thead>
+                    <tr>
+                        <th data-column="0" onclick="sortTable(0)">Квартира</th>
+                        <th data-column="1" onclick="sortTable(1)">Тел 1</th>
+                        <th data-column="2" onclick="sortTable(2)">Тел 2</th>
+                        <th data-column="3" onclick="sortTable(3)">Г/Н автомобиля</th>
+                        <th data-column="4" onclick="sortTable(4)">Имя</th>
+                        <th data-column="5" onclick="sortTable(5)">Дата обновления</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Данные загружаются через JavaScript -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="storage-info" id="storageInfo">
+            Данные сохраняются автоматически в браузере. Для постоянного хранения используйте "Сохранить в файл".
+        </div>
+        
+        <div class="stats" id="stats">
+            Всего записей: <span id="totalCount">0</span> | 
+            Найдено: <span id="filteredCount">0</span> |
+            Последнее сохранение: <span id="lastUpdate">-</span>
+        </div>
+    </div>
+
+    <script>
+        // Исходные данные из Excel файла
+        const originalData = [
+            {apartment: "3", phone1: "89951530932", phone2: "", car_number: "O 569 KC 716", name: "Олеся Зверева", date: "2023-10-10"},
+            {apartment: "5", phone1: "89139109217", phone2: "", car_number: "Н 701 УЕ", name: "", date: "2019-09-29"},
+            {apartment: "6", phone1: "89537965224", phone2: "89134731719", car_number: "Е 314 ОС 154<br>А 707 РН 54", name: "", date: "2019-09-29"},
+            {apartment: "10", phone1: "89231500917", phone2: "", car_number: "К 462 НХ 154", name: "Константин", date: "2025-10-02"},
+            {apartment: "14", phone1: "89237047030", phone2: "", car_number: "C 285 УМ 154", name: "", date: "2019-09-29"},
+            {apartment: "17", phone1: "89628404755", phone2: "", car_number: "У 122 АЕ 154", name: "Михаил Ядренкин", date: "2020-07-03"},
+            {apartment: "21", phone1: "89133916906", phone2: "", car_number: "X 393 XO 54", name: "", date: "2019-09-29"},
+            {apartment: "31", phone1: "89628318242", phone2: "", car_number: "Н 238 КЕ", name: "Гончаренко Александр", date: "2022-01-03"},
+            {apartment: "35", phone1: "89231403100", phone2: "", car_number: "М 634 УО 54", name: "", date: "2019-09-29"},
+            {apartment: "42", phone1: "89139802442", phone2: "", car_number: "А 142 НН 154", name: "Роман", date: "2025-05-25"},
+            {apartment: "42", phone1: "89139802442", phone2: "", car_number: "В 040 ТО", name: "Роман", date: "2025-05-25"},
+            {apartment: "44", phone1: "89139217311", phone2: "", car_number: "X 054 BC 54", name: "", date: "2019-09-29"},
+            {apartment: "52", phone1: "89139599088", phone2: "", car_number: "Н 815 УУ 154", name: "Надежда Иосифовна", date: "2021-12-22"},
+            {apartment: "54", phone1: "89139012254", phone2: "", car_number: "X 060 TO", name: "", date: "2019-09-29"},
+            {apartment: "57", phone1: "89139293667", phone2: "", car_number: "O 038 OK 54", name: "Дмитрий", date: "2021-12-21"},
+            {apartment: "59", phone1: "89139110608", phone2: "", car_number: "C 835 HK 154<br>H 791 AB 154", name: "", date: "2019-09-29"},
+            {apartment: "60", phone1: "89139078873", phone2: "89139133763", car_number: "B 018 УТ 27", name: "", date: "2019-09-29"},
+            {apartment: "69", phone1: "89609354617", phone2: "", car_number: "B 365 ТУ 154", name: "", date: "2019-09-29"},
+            {apartment: "81", phone1: "89231204859", phone2: "", car_number: "C 256 УМ 54<br>К412ВО154", name: "Владимир", date: "2021-12-22"},
+            {apartment: "82", phone1: "89134840691", phone2: "", car_number: "Е 567 ОУ", name: "", date: "2019-09-29"},
+            {apartment: "83", phone1: "89139535596", phone2: "", car_number: "B 167 AH 54", name: "", date: "2019-09-29"},
+            {apartment: "86", phone1: "89134870855", phone2: "", car_number: "НВ 110 ВА", name: "", date: "2019-09-29"},
+            {apartment: "87", phone1: "89139096303", phone2: "89059462644", car_number: "Р 361 ВА 154", name: "Ирина", date: "2025-07-15"},
+            {apartment: "92", phone1: "89231550909", phone2: "89231510505", car_number: "Н 228 АТ", name: "", date: "2019-09-29"},
+            {apartment: "98", phone1: "89137567864", phone2: "", car_number: "Р 914 ОВ 54", name: "Зоя", date: "2021-12-22"},
+            {apartment: "99", phone1: "89134877727", phone2: "", car_number: "Р 077 УС 22<br>С 690 КР 04<br>Е 844 ВР 154<br>Е 333 АА 54", name: "", date: "2019-09-29"},
+            {apartment: "100", phone1: "89137139754", phone2: "", car_number: "А924ХМ 154", name: "Наталья", date: "2024-10-07"},
+            {apartment: "106", phone1: "89134643846", phone2: "", car_number: "А 269 УР 42", name: "Егор", date: "2020-07-03"},
+            {apartment: "107", phone1: "89133957775", phone2: "", car_number: "C 720 PP 154", name: "", date: "2019-09-29"},
+            {apartment: "108", phone1: "89139247189", phone2: "", car_number: "A 762 MB", name: "", date: "2019-09-29"},
+            {apartment: "111", phone1: "89537643737", phone2: "+79139865823", car_number: "Р 721 УХ 54", name: "Илья Владимирович", date: "2020-07-02"},
+            {apartment: "119", phone1: "89137831512", phone2: "", car_number: "В 791 ТВ", name: "", date: "2019-09-29"},
+            {apartment: "123", phone1: "89237005109", phone2: "89082103128", car_number: "Р 580 КМ 19", name: "", date: "2019-09-29"},
+            {apartment: "125", phone1: "89232584076", phone2: "", car_number: "К 846 СР 154<br>Р 837ХР 55", name: "", date: "2021-12-22"},
+            {apartment: "129", phone1: "89134541416", phone2: "", car_number: "Р 174 РХ 54", name: "Максим", date: "2022-07-11"},
+            {apartment: "133", phone1: "89130151400", phone2: "", car_number: "Е 656 ТН 154", name: "Иван", date: "2021-12-22"},
+            {apartment: "134", phone1: "89139119583", phone2: "", car_number: "У 268 ХХ 54", name: "", date: "2022-12-22"},
+            {apartment: "139", phone1: "89139172944", phone2: "89137992790", car_number: "Р 687 СХ 154<br>Н 952 НН 154", name: "Евгений", date: "2024-10-07"},
+            {apartment: "140", phone1: "89137550855", phone2: "", car_number: "Р 800 КР", name: "Мария", date: "2021-12-23"},
+            {apartment: "141", phone1: "89139302827", phone2: "", car_number: "А 869 ОВ 154", name: "Михаил", date: "2020-07-02"},
+            {apartment: "147", phone1: "89537681854", phone2: "", car_number: "Х 128 РС 54", name: "", date: "2019-09-29"},
+            {apartment: "148", phone1: "89134754008", phone2: "", car_number: "В 978 РН 154", name: "", date: "2019-09-29"},
+            {apartment: "153", phone1: "89095295152", phone2: "", car_number: "E 730 TK 154", name: "", date: "2019-09-29"},
+            {apartment: "153", phone1: "89139179146", phone2: "", car_number: "Н 191 ТХ 154", name: "Роман", date: "2021-07-10"},
+            {apartment: "154", phone1: "89139127850", phone2: "", car_number: "K 906 KE 799", name: "", date: "2019-09-29"},
+            {apartment: "156", phone1: "89232331352", phone2: "89529206224", car_number: "Е 217 ВХ 154<br>К 877 СЕ 154", name: "Роман", date: "2020-07-16"},
+            {apartment: "158", phone1: "89059514851", phone2: "", car_number: "B 257 TH", name: "", date: "2019-09-29"},
+            {apartment: "160", phone1: "89137200415", phone2: "", car_number: "У 214 УО 22", name: "", date: "2019-09-29"},
+            {apartment: "162", phone1: "89130641722", phone2: "", car_number: "В 294 АН", name: "", date: "2019-09-29"},
+            {apartment: "165", phone1: "89050958080", phone2: "", car_number: "C 437 TX<br>E 984 AT", name: "", date: "2019-09-29"},
+            {apartment: "169", phone1: "89130128654", phone2: "", car_number: "P 116 KH 54", name: "", date: "2019-09-29"},
+            {apartment: "170", phone1: "89139277720", phone2: "", car_number: "O 414 CP 54", name: "", date: "2019-09-29"},
+            {apartment: "171", phone1: "89618766424", phone2: "89137609944", car_number: "К 690 ТВ 154<br>Р 725 РК 154", name: "Давид Сокол", date: "2024-12-27"},
+            {apartment: "172", phone1: "89529493403", phone2: "", car_number: "У 604 УЕ 54", name: "", date: "2019-09-29"},
+            {apartment: "173", phone1: "89139555543", phone2: "", car_number: "У 179 РМ 54", name: "", date: "2019-09-29"},
+            {apartment: "174", phone1: "89139453473", phone2: "", car_number: "К 287 РВ 54", name: "", date: "2019-09-29"},
+            {apartment: "175", phone1: "89139306563", phone2: "", car_number: "О 152 МН 154", name: "", date: "2022-09-15"},
+            {apartment: "176", phone1: "89139068796", phone2: "", car_number: "H 561 EE 54", name: "", date: "2019-09-29"},
+            {apartment: "177", phone1: "89232440003", phone2: "89607980976", car_number: "C 183 OK 154", name: "", date: "2019-09-29"},
+            {apartment: "181", phone1: "89237389188", phone2: "89237383488", car_number: "В 573 АТ", name: "Ольга/Антон", date: "2021-12-22"},
+            {apartment: "183", phone1: "89635010333", phone2: "", car_number: "А 250 ОХ 122", name: "Вера", date: "2021-12-22"},
+            {apartment: "184", phone1: "89130082006", phone2: "", car_number: "К 027 ТН 154", name: "Тойота Ипсум Серебро", date: "2021-12-22"},
+            {apartment: "188", phone1: "89139209080", phone2: "89612250013", car_number: "Р 700 ВУ 797", name: "Роман", date: "2023-09-27"},
+            {apartment: "196", phone1: "89833050306", phone2: "89831258370", car_number: "M 367 TO 54", name: "Алексей", date: "2021-12-23"},
+            {apartment: "197", phone1: "89529210508", phone2: "", car_number: "А 570 УК 154", name: "", date: "2019-09-29"},
+            {apartment: "офис 5", phone1: "89139493800", phone2: "", car_number: "Т 077 ВВ, 110 (?)", name: "", date: "2019-09-29"},
+            {apartment: "офис 7", phone1: "89139866537", phone2: "", car_number: "P 445 KP", name: "", date: "2019-09-29"},
+            {apartment: "", phone1: "89224467394", phone2: "", car_number: "М724РО", name: "Денис Анатольевич", date: "2020-07-02"},
+            {apartment: "", phone1: "89137045804", phone2: "", car_number: "У 574 АР 55", name: "Татьяна", date: "2020-07-02"},
+            {apartment: "", phone1: "89137407942", phone2: "", car_number: "А 355 НР 124", name: "Иван", date: "2020-07-10"},
+            {apartment: "", phone1: "89231772511", phone2: "", car_number: "Е 204 СХ 154", name: "Владимир", date: "2020-07-04"},
+            {apartment: "", phone1: "89231987752", phone2: "", car_number: "Х 797 УТ 42", name: "Алексей", date: "2020-07-10"}
+        ];
+
+        // Ключ для LocalStorage
+        const STORAGE_KEY = 'sirenevaya31_car_registry';
+        
+        // Основные переменные
+        let carData = [];
+        let currentData = [];
+        let sortDirection = {};
+        let currentSearch = '';
+        let editingCell = null;
+
+        // Форматирование даты
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('ru-RU');
+        }
+
+        // Текущая дата для новых записей
+        function getCurrentDate() {
+            const now = new Date();
+            return now.toISOString().split('T')[0];
+        }
+
+        // Загрузка данных из LocalStorage
+        function loadFromStorage() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        return parsed;
+                    }
+                }
+            } catch (e) {
+                console.error('Ошибка загрузки из LocalStorage:', e);
+            }
+            return JSON.parse(JSON.stringify(originalData));
+        }
+
+        // Сохранение данных в LocalStorage
+        function saveToStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(carData));
+                updateLastUpdate();
+                showMessage('Данные сохранены в браузере', 'success');
+            } catch (e) {
+                console.error('Ошибка сохранения в LocalStorage:', e);
+                showMessage('Ошибка сохранения', 'error');
+            }
+        }
+
+        // Загрузка данных в таблицу
+        function loadTableData() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            currentData.forEach((row, index) => {
+                const tr = document.createElement('tr');
+                const originalIndex = carData.findIndex(item => 
+                    item === row
+                );
+                
+                tr.innerHTML = `
+                    <td class="editable" onclick="editCell(this, ${originalIndex}, 'apartment')">${row.apartment || ''}</td>
+                    <td class="editable" onclick="editCell(this, ${originalIndex}, 'phone1')">${row.phone1 || ''}</td>
+                    <td class="editable" onclick="editCell(this, ${originalIndex}, 'phone2')">${row.phone2 || ''}</td>
+                    <td class="editable" onclick="editCell(this, ${originalIndex}, 'car_number')">${row.car_number || ''}</td>
+                    <td class="editable" onclick="editCell(this, ${originalIndex}, 'name')">${row.name || ''}</td>
+                    <td class="date-cell">${formatDate(row.date)}</td>
+                    <td>
+                        <button class="btn-delete" onclick="deleteRow(${originalIndex})">Удалить</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            updateStats();
+        }
+
+        // Поиск по таблице
+        function searchTable() {
+            const searchType = document.getElementById('searchType').value;
+            const searchText = document.getElementById('searchInput').value.toLowerCase();
+            const highlight = document.getElementById('highlightMatches').checked;
+            currentSearch = searchText;
+            
+            if (!searchText) {
+                currentData = [...carData];
+                loadTableData();
+                return;
+            }
+            
+            currentData = carData.filter(row => {
+                let searchString = '';
+                switch(searchType) {
+                    case 'apartment':
+                        searchString = row.apartment || '';
+                        break;
+                    case 'car':
+                        searchString = row.car_number || '';
+                        break;
+                    case 'name':
+                        searchString = row.name || '';
+                        break;
+                    case 'phone':
+                        searchString = (row.phone1 || '') + (row.phone2 || '');
+                        break;
+                    default:
+                        searchString = Object.values(row).join(' ').toLowerCase();
+                }
+                return searchString.toLowerCase().includes(searchText);
+            });
+            
+            loadTableData();
+            
+            // Подсветка совпадений
+            if (highlight && searchText) {
+                highlightMatches(searchText, searchType);
+            }
+        }
+
+        // Подсветка совпадений
+        function highlightMatches(searchText, searchType) {
+            const cells = document.querySelectorAll('#tableBody td:not(.date-cell)');
+            cells.forEach(cell => {
+                cell.classList.remove('highlight');
+                const cellText = cell.textContent.toLowerCase();
+                if (cellText.includes(searchText)) {
+                    cell.classList.add('highlight');
+                }
+            });
+        }
+
+        // Сортировка таблицы
+        function sortTable(columnIndex) {
+            const columns = ['apartment', 'phone1', 'phone2', 'car_number', 'name', 'date'];
+            const column = columns[columnIndex];
+            
+            if (!sortDirection[column]) {
+                sortDirection[column] = 'asc';
+            } else {
+                sortDirection[column] = sortDirection[column] === 'asc' ? 'desc' : 'asc';
+            }
+            
+            currentData.sort((a, b) => {
+                let aValue = a[column] || '';
+                let bValue = b[column] || '';
+                
+                if (column === 'apartment') {
+                    // Для числовых значений квартир
+                    const aNum = parseFloat(aValue);
+                    const bNum = parseFloat(bValue);
+                    if (!isNaN(aNum) && !isNaN(bNum)) {
+                        aValue = aNum;
+                        bValue = bNum;
+                    }
+                } else if (column === 'date') {
+                    aValue = new Date(aValue).getTime();
+                    bValue = new Date(bValue).getTime();
+                }
+                
+                if (aValue < bValue) return sortDirection[column] === 'asc' ? -1 : 1;
+                if (aValue > bValue) return sortDirection[column] === 'asc' ? 1 : -1;
+                return 0;
+            });
+            
+            // Обновить индикаторы сортировки
+            document.querySelectorAll('th').forEach(th => th.classList.remove('sort-asc', 'sort-desc'));
+            const currentTh = document.querySelector(`th[data-column="${columnIndex}"]`);
+            if (currentTh) {
+                currentTh.classList.add(`sort-${sortDirection[column]}`);
+            }
+            
+            loadTableData();
+        }
+
+        // Редактирование ячейки
+        function editCell(cell, rowIndex, field) {
+            if (editingCell) {
+                finishEditing();
+            }
+            
+            const oldValue = cell.textContent;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = oldValue;
+            input.className = 'edit-input';
+            
+            cell.innerHTML = '';
+            cell.appendChild(input);
+            cell.classList.add('editing');
+            input.focus();
+            
+            editingCell = {
+                cell: cell,
+                input: input,
+                rowIndex: rowIndex,
+                field: field,
+                oldValue: oldValue
+            };
+            
+            input.addEventListener('blur', finishEditing);
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    finishEditing();
+                }
+            });
+        }
+
+        // Завершение редактирования
+        function finishEditing() {
+            if (!editingCell) return;
+            
+            const { cell, input, rowIndex, field, oldValue } = editingCell;
+            const newValue = input.value.trim();
+            
+            cell.textContent = newValue;
+            cell.classList.remove('editing');
+            
+            // Обновляем данные
+            if (rowIndex >= 0 && rowIndex < carData.length) {
+                if (newValue !== oldValue) {
+                    carData[rowIndex][field] = newValue;
+                    // Автоматически обновляем дату
+                    carData[rowIndex].date = getCurrentDate();
+                    
+                    // Сохраняем изменения
+                    saveToStorage();
+                    
+                    // Обновляем текущие данные для поиска
+                    const currentRowIndex = currentData.findIndex(item => item === carData[rowIndex]);
+                    if (currentRowIndex >= 0) {
+                        currentData[currentRowIndex][field] = newValue;
+                        currentData[currentRowIndex].date = getCurrentDate();
+                    }
+                    
+                    // Обновляем таблицу
+                    loadTableData();
+                }
+            }
+            
+            editingCell = null;
+        }
+
+        // Добавление новой строки
+        function addNewRow() {
+            const newRow = {
+                apartment: "",
+                phone1: "",
+                phone2: "",
+                car_number: "",
+                name: "",
+                date: getCurrentDate()
+            };
+            
+            carData.unshift(newRow);
+            currentData = [...carData];
+            
+            saveToStorage();
+            loadTableData();
+            
+            // Прокрутить к верху
+            window.scrollTo(0, 0);
+            
+            // Начать редактирование первой ячейки
+            setTimeout(() => {
+                const firstCell = document.querySelector('#tableBody tr:first-child td:first-child');
+                if (firstCell) {
+                    editCell(firstCell, 0, 'apartment');
+                }
+            }, 100);
+        }
+
+        // Удаление строки
+        function deleteRow(rowIndex) {
+            if (confirm('Удалить эту запись?')) {
+                carData.splice(rowIndex, 1);
+                currentData = [...carData];
+                
+                saveToStorage();
+                loadTableData();
+                showMessage('Запись удалена', 'info');
+            }
+        }
+
+        // Экспорт в CSV
+        function exportToCSV() {
+            const headers = ['Квартира', 'Тел 1', 'Тел 2', 'Г/Н автомобиля', 'Имя', 'Дата обновления'];
+            const csvContent = [
+                headers.join(','),
+                ...carData.map(row => [
+                    `"${row.apartment || ''}"`,
+                    `"${row.phone1 || ''}"`,
+                    `"${row.phone2 || ''}"`,
+                    `"${(row.car_number || '').replace(/<br>/g, '; ')}"`,
+                    `"${row.name || ''}"`,
+                    `"${formatDate(row.date)}"`
+                ].join(','))
+            ].join('\n');
+            
+            const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `Сиреневая_31_авто_${getCurrentDate()}.csv`;
+            link.click();
+            showMessage('Файл CSV скачан', 'success');
+        }
+
+        // Сохранение в файл JSON
+        function saveToFile() {
+            const data = {
+                metadata: {
+                    title: "Реестр автомобилей - Сиреневая 31",
+                    lastUpdate: new Date().toISOString(),
+                    totalRecords: carData.length
+                },
+                data: carData
+            };
+            
+            const jsonStr = JSON.stringify(data, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `Сиреневая_31_авто_${getCurrentDate()}.json`;
+            link.click();
+            showMessage('Файл JSON сохранен', 'success');
+        }
+
+        // Загрузка из файла JSON
+        function loadFromFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.data && Array.isArray(data.data)) {
+                        carData = data.data;
+                        currentData = [...carData];
+                        saveToStorage();
+                        loadTableData();
+                        showMessage('Данные загружены из файла', 'success');
+                    } else {
+                        showMessage('Неверный формат файла', 'error');
+                    }
+                } catch (error) {
+                    showMessage('Ошибка чтения файла', 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Сброс к исходным данным
+        function resetToOriginal() {
+            if (confirm('Вернуть исходные данные? Все изменения будут потеряны.')) {
+                carData = JSON.parse(JSON.stringify(originalData));
+                currentData = [...carData];
+                saveToStorage();
+                loadTableData();
+                clearSearch();
+                showMessage('Данные сброшены к исходным', 'info');
+            }
+        }
+
+        // Очистка поиска
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            currentData = [...carData];
+            loadTableData();
+        }
+
+        // Обновление статистики
+        function updateStats() {
+            document.getElementById('totalCount').textContent = carData.length;
+            document.getElementById('filteredCount').textContent = currentData.length;
+        }
+
+        // Обновление даты последнего сохранения
+        function updateLastUpdate() {
+            const now = new Date();
+            const formattedDate = now.toLocaleString('ru-RU', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            document.getElementById('lastUpdate').textContent = formattedDate;
+        }
+
+        // Показать сообщение
+        function showMessage(text, type) {
+            // Можно добавить уведомления, если нужно
+            console.log(`${type}: ${text}`);
+        }
+
+        // Инициализация при загрузке
+        document.addEventListener('DOMContentLoaded', function() {
+            // Загружаем данные из LocalStorage или исходные
+            carData = loadFromStorage();
+            currentData = [...carData];
+            
+            loadTableData();
+            updateLastUpdate();
+            
+            // Обработчик клика вне поля ввода для завершения редактирования
+            document.addEventListener('click', function(e) {
+                if (editingCell && !editingCell.input.contains(e.target) && !editingCell.cell.contains(e.target)) {
+                    finishEditing();
+                }
+            });
+            
+            // Автосохранение при закрытии страницы
+            window.addEventListener('beforeunload', function() {
+                saveToStorage();
+            });
+            
+            // Показать информацию о хранилище
+            const storageInfo = document.getElementById('storageInfo');
+            try {
+                const used = JSON.stringify(carData).length;
+                const limit = 5 * 1024 * 1024; // 5MB typical limit
+                storageInfo.innerHTML = `Данные сохраняются автоматически в браузере (использовано: ${(used/1024).toFixed(1)} KB). Для постоянного хранения используйте "Сохранить в файл".`;
+            } catch (e) {
+                storageInfo.innerHTML = 'Данные сохраняются автоматически в браузере. Для постоянного хранения используйте "Сохранить в файл".';
+            }
+        });
+    </script>
+</body>
+</html>
