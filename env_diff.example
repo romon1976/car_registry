@@ -1,0 +1,7 @@
+--- .env.example (原始)
+
+
++++ .env.example (修改后)
+# URL вашего Google Apps Script Web App
+# Получите его после деплоя Apps Script (см. README.md)
+VITE_GOOGLE_SCRIPT_URL=https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec
